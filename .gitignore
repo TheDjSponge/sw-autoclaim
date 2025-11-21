@@ -1,0 +1,15 @@
+.env
+
+
+## Python files
+*.pyc
+__pycache__/
+
+
+## go files
+
+
+
+## IDE files
+.vscode/
+
