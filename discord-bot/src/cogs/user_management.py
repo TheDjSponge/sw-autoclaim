@@ -9,7 +9,14 @@ logger = logging.getLogger("sw_discord_bot.user_management")
 
 
 class UserManagement(commands.Cog):
-    def __init__(self, bot):
+    """Cog extension that allows to manage SW users and store them into a database."""
+
+    def __init__(self, bot: commands.Bot) -> None:
+        """Initializes a UserManagement Cog extension.
+
+        Args:
+            bot (commands.Bot): bot instance to which the cog is added.
+        """
         self.bot = bot
 
     @app_commands.command(
@@ -26,8 +33,10 @@ class UserManagement(commands.Cog):
         hive_user_id: str,
         server: Literal["global", "korea", "japan", "china", "asia", "europe"],
     ):
-        """Says hello"""
-        await interaction.response.send_message(
+        """Registers a hive user-id as well as relevant information into a database."""
+        await interaction.response.defer(ephemeral=True)
+
+        await interaction.followup.send(
             f"Registered Hive ID **{hive_user_id}** for server **{server}**!"
         )
         print(interaction)
@@ -53,5 +62,10 @@ class UserManagement(commands.Cog):
 
 
 async def setup(bot: commands.Bot):
+    """Adds the extension to a bot.
+
+    Args:
+        bot (commands.Bot): Bot instance to which the extension is added.
+    """
     logger.debug("Loading UserManagement extension cog")
     await bot.add_cog(UserManagement(bot))

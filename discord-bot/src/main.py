@@ -1,25 +1,30 @@
 ## Declare bot
 import os
 import logging
-from dotenv import load_dotenv
+
 import discord
 from discord.ext import commands
-from cogs.user_management import UserManagement
+from dotenv import load_dotenv
 
 logger = logging.getLogger("sw_discord_bot")
 
 
 class SWAutoClaimBot(commands.Bot):
+    """Discord bot used to register Summoners war users for automatic coupon claiming."""
+
     def __init__(self) -> None:
+        """Initialises an SWAutoClaimBot"""
         intents = discord.Intents.default()
         intents.message_content = True
         super().__init__(command_prefix="$", intents=intents)
 
-    async def setup_hook(self):
+    async def setup_hook(self) -> None:
+        """Hook called before the bot is ready for interaction. Loads extensions and syncs the command tree."""
         await self.load_extension("cogs.user_management")
         await self.tree.sync()
 
-    async def on_ready(self):
+    async def on_ready(self) -> None:
+        """Event called whenever the bot is ready for usage."""
         logger.info(f"Logged in as {self.user} (ID: {self.user.id})")
 
 
