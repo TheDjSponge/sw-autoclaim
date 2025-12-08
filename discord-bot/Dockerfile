@@ -1,4 +1,4 @@
-FROM python:3.12.12-alpine3.23
+FROM --platform=linux/arm64/v8 python:3.12.12-alpine3.23 as build
 
 
 WORKDIR /app
