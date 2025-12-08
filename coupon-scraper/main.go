@@ -30,12 +30,13 @@ func main(){
 	godotenv.Load("../.env")
 	gamesCodesURL := os.Getenv("GAMECODES_URL")
 	redemptionServiceURL := os.Getenv("REDEMPTION_SERVICE_URL")
+	addTicketsEndpoint := redemptionServiceURL + "/v1/coupons"
 	codes, err := ScrapCodesFromURL(gamesCodesURL)
 	if err != nil{
 		log.Fatalf("Couldn't scrap HTML from URL, got error: %v", err.Error())
 	}
 	// TODO inject actual backend url
-	err = SendCurrentCoupons(redemptionServiceURL,codes)
+	err = SendCurrentCoupons(addTicketsEndpoint,codes)
 	if err != nil{
 		log.Printf("Got error when trying to send coupon codes: %v", err.Error())
 	}	
@@ -86,7 +87,7 @@ func SendCurrentCoupons(url string, extractedCoupons map[string](struct{})) (err
 		Codes []string `json:"coupon_codes"`
 	}
 	payloadData := bodyParams{Codes: StringSetToSlice(extractedCoupons)}
-	log.Println("Trying to send codes : ",payloadData)
+	log.Println("Trying to send the following fetched codes: ",payloadData)
 	marshalledPayload, err := json.Marshal(payloadData)
 	if err != nil{
 		return err
@@ -101,8 +102,8 @@ func SendCurrentCoupons(url string, extractedCoupons map[string](struct{})) (err
 	if err != nil{
 		return err
 	}
-	if resp.StatusCode != 200{
-		return fmt.Errorf("post gamecodes did not result in 200 http code")
+	if resp.StatusCode != http.StatusCreated{
+		return fmt.Errorf("post gamecodes did not result in 200 http code, got code: %w", resp.StatusCode)
 	}
 	return nil
 }
