@@ -1,0 +1,35 @@
+name: Discord bot CI
+
+
+on:
+  push:
+    branches: ["main"]
+    paths:
+      - 'discord-bot/**'
+      - '.github/workflows/cd_discord_bot.yml'
+jobs:
+  build_and_push_image:
+    name: build-docker-image
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            .github
+            src
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+        
+      - name: Build and Push Discord Image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./discord-bot
+          push: true
+          tags: ghcr.io/${{github.repository_owner}}/sw-autoclaim-discord-bot:latest
