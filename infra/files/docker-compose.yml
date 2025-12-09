@@ -1,0 +1,25 @@
+services:
+  # ... (db, migrate, etc.) ...
+
+  # 1. YOUR BOT SERVICE
+  discord-bot:
+    # MUST match the tag you pushed in GitHub Actions
+    image: ghcr.io/thedjsponge/sw-autoclaim-discord-bot:latest 
+    container_name: sw-discord-bot
+    restart: always
+    env_file: .env # Loads the DISCORD_TOKEN
+    platform: linux/arm64/v8
+
+  # 2. WATCHTOWER (The Updater)
+  watchtower:
+    image: containrrr/watchtower
+    container_name: watchtower
+    restart: always
+    # Check for updates every 5 minutes (300 seconds)
+    command: --interval 300 --cleanup
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      # CRITICAL: Watchtower needs its own credentials to check GHCR
+      - REPO_USER=${GH_USER}
+      - REPO_PASS=${GH_PAT}
