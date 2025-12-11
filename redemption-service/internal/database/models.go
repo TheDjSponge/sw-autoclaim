@@ -5,6 +5,7 @@
 package database
 
 import (
+	"database/sql"
 	"time"
 
 	"github.com/google/uuid"
@@ -16,4 +17,19 @@ type Coupon struct {
 	Status      string
 	FirstSeenAt time.Time
 	UpdatedAt   time.Time
+}
+
+type DiscordUser struct {
+	ID        uuid.UUID
+	Username  string
+	DiscordID int32
+}
+
+type User struct {
+	ID        uuid.UUID
+	DiscordID int32
+	HiveID    string
+	Server    string
+	Active    sql.NullBool
+	GameUid   int32
 }

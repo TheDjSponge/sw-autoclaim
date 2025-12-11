@@ -12,21 +12,24 @@ import (
 	_ "github.com/lib/pq"
 )
 
-
-
-type apiConfig struct{
-	database *database.Queries
+type apiConfig struct {
+	database          *database.Queries
+	checkUserAPIURL   string
+	claimCouponAPIURL string
 }
 
-func main(){
+func main() {
 	godotenv.Load("../.env")
 	urlDB := os.Getenv("DB_URL")
+	checkUserAPIURL := os.Getenv("CHECK_USER_URL")
+	claimCouponAPIURL := os.Getenv("CLAIM_COUPON_URL")
+
 	db, err := sql.Open("postgres", urlDB)
-	if err != nil{
+	if err != nil {
 		log.Printf("Error when trying to open database: %w", err)
 	}
 	dbQueries := database.New(db)
-	apiCfg := apiConfig{database: dbQueries}
+	apiCfg := apiConfig{database: dbQueries, checkUserAPIURL: checkUserAPIURL, claimCouponAPIURL: claimCouponAPIURL}
 
 	multiplexer := http.ServeMux{}
 	multiplexer.HandleFunc("GET /v1/health", GetServerHealth)
@@ -35,15 +38,17 @@ func main(){
 	multiplexer.HandleFunc("POST /v1/coupons", apiCfg.HandleNewCoupon)
 	multiplexer.HandleFunc("GET /v1/coupons", apiCfg.HandleGetCoupons)
 
+	multiplexer.HandleFunc("POST /v1/users", apiCfg.HandleNewUser)
+	multiplexer.HandleFunc("DELETE /v1/users", apiCfg.HandleDeleteUser)
+	multiplexer.HandleFunc("GET /v1/users", apiCfg.HandleGetAllUsers)
+
 	serverPort := os.Getenv("SERVER_PORT")
-	server:= http.Server{Addr: fmt.Sprintf(":%v",serverPort), Handler: &multiplexer}
+	server := http.Server{Addr: fmt.Sprintf(":%v", serverPort), Handler: &multiplexer}
 	server.ListenAndServe()
 }
 
-
-func GetServerHealth(w http.ResponseWriter, r *http.Request){
+func GetServerHealth(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("OK"))
 }
-

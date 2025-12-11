@@ -6,13 +6,12 @@ import (
 	"net/http"
 )
 
+type JsonResponse struct {
+	Status  int    `json:"status"`
+	Message string `json:"message"`
+}
 
-type JsonResponse struct{
-		Status int `json:"status"`
-		Message string `json:"message"` 
-	}
-
-func respondWithError(w http.ResponseWriter, code int, msg string) {
+func respondWithMessage(w http.ResponseWriter, code int, msg string) {
 
 	retError := JsonResponse{Status: code, Message: msg}
 	byteError, err := json.Marshal(retError)
@@ -29,7 +28,7 @@ func respondWithJSON(w http.ResponseWriter, code int, payload interface{}) {
 
 	dat, err := json.Marshal(payload)
 	if err != nil {
-		respondWithError(w, 500, "Couldn't marshal response body")
+		respondWithMessage(w, 500, "Couldn't marshal response body")
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(code)
