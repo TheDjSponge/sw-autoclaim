@@ -13,7 +13,6 @@ RUN CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -ldflags='-s -w' -o /app/scra
 ## We define a final lightweight image that will run the app
 FROM alpine:latest AS final
 
-USER appuser
 WORKDIR /app
 
 COPY --from=builder /app/scraper /app/scraper

@@ -17,12 +17,12 @@ services:
       retries: 5
 
     volumes:
-      - db-data:/var/lib/postgresql/data
+      - db-data:/var/lib/postgresql
 
   migration-service:
-    image: ghcr.io/${GITHUB_REPO_OWNER}/sw-autoclaim-migrator:latest
+    image: ghcr.io/${GH_USER}/sw-db-migrator:latest
     container_name: sw-migration-service
-    restart: always
+    restart: on-failure:3
     environment:
       - DB_URL=postgres://${DB_USER}:${DB_USER}@db/${DB_NAME}?sslmode=disable
     depends_on:
@@ -37,14 +37,14 @@ services:
       - DB_URL=postgres://${DB_USER}:${DB_USER}@db/${DB_NAME}?sslmode=disable
       - CHECK_USER_URL=${CHECK_USER_URL}
       - CLAIM_COUPON_URL=${CLAIM_COUPON_URL}
-      - SERVER_PORT=${SERVER_PORT}
+      - SERVER_PORT=8080
     depends_on:
       db:
         condition: service_healthy
       migration-service:
         condition: service_completed_successfully
     ports:
-      - "8080:${SERVER_PORT}"
+      - "8080:8080"
 
   discord-bot:
     image: ghcr.io/${GH_USER}/sw-autoclaim-discord-bot:latest 
