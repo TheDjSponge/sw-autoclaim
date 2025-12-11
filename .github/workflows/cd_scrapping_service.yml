@@ -1,12 +1,12 @@
-name: Redemption service CD
+name: Scrapping service CD
 
 
 on:
   push:
     branches: ["main"]
     paths:
-      - 'redemption-service/**'
-      - '.github/workflows/cd_redemption_service.yml'
+      - 'coupon-scraper/**'
+      - '.github/workflows/cd_scrapping_service.yml'
 jobs:
   build_and_push_image:
     name: build-docker-image
@@ -17,7 +17,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           sparse-checkout: |
-            redemption-service
+            coupon-scraper
             .github
       
       - name: Set up QEMU
@@ -36,7 +36,7 @@ jobs:
       - name: Build and Push Discord Image
         uses: docker/build-push-action@v5
         with:
-          context: ./redemption-service
+          context: ./coupon-scraper
           push: true
-          tags: ghcr.io/${{secrets.GIT_USERNAME}}/sw-autoclaim-redemption:latest
+          tags: ghcr.io/${{secrets.GIT_USERNAME}}/sw-autoclaim-scrapper:latest
           platforms: linux/arm64/v8
