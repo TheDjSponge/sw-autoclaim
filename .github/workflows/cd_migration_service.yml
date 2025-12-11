@@ -1,0 +1,42 @@
+name: DB migrator service
+
+
+on:
+  push:
+    branches: ["main"]
+    paths:
+      - 'database/**'
+      - '.github/workflows/cd_migration_service.yml'
+jobs:
+  build_and_push_image:
+    name: build-docker-image
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            database
+            .github
+      
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ secrets.GIT_USERNAME }}
+          password: ${{ secrets.GH_PAT }}
+        
+      - name: Build and Push Discord Image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./database
+          push: true
+          tags: ghcr.io/${{secrets.GIT_USERNAME}}/sw-db-migrator:latest
+          platforms: linux/arm64/v8

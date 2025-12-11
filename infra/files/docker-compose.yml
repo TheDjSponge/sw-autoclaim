@@ -1,25 +1,88 @@
 services:
-  # ... (db, migrate, etc.) ...
 
-  # 1. YOUR BOT SERVICE
+  db:
+    image: postgres
+    container_name: sw-db
+    restart: always
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_USER}
+      POSTGRES_DB: ${DB_NAME}
+    ports:
+      - "5432:5432"
+    healthcheck: # CRITICAL: Tells Docker when the DB is ready to accept connections
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+    volumes:
+      - db-data:/var/lib/postgresql/data
+
+  migration-service:
+    image: ghcr.io/${GITHUB_REPO_OWNER}/sw-autoclaim-migrator:latest
+    container_name: sw-migration-service
+    restart: always
+    environment:
+      - DB_URL=postgres://${DB_USER}:${DB_USER}@db/${DB_NAME}?sslmode=disable
+    depends_on:
+      db:
+        condition: service_healthy
+
+  redemption-service:
+    image: ghcr.io/${GH_USER}/sw-autoclaim-redemption:latest 
+    container_name: sw-redemption-service
+    restart: always
+    environment:
+      - DB_URL=postgres://${DB_USER}:${DB_USER}@db/${DB_NAME}?sslmode=disable
+      - CHECK_USER_URL=${CHECK_USER_URL}
+      - CLAIM_COUPON_URL=${CLAIM_COUPON_URL}
+      - SERVER_PORT=${SERVER_PORT}
+    depends_on:
+      db:
+        condition: service_healthy
+      migration-service:
+        condition: service_completed_successfully
+    ports:
+      - "8080:${SERVER_PORT}"
+
   discord-bot:
-    # MUST match the tag you pushed in GitHub Actions
-    image: ghcr.io/thedjsponge/sw-autoclaim-discord-bot:latest 
+    image: ghcr.io/${GH_USER}/sw-autoclaim-discord-bot:latest 
     container_name: sw-discord-bot
     restart: always
-    env_file: .env # Loads the DISCORD_TOKEN
+    environment:
+      - DISCORD_BOT_KEY=${DISCORD_BOT_KEY}
+      - REDEMPTION_SERVICE_URL="http://redemption-service:${SERVER_PORT}"
     platform: linux/arm64/v8
+    depends_on:
+      redemption-service:
+        condition: service_started
 
-  # 2. WATCHTOWER (The Updater)
+
+  coupon-scraper:
+    image: ghcr.io/${GH_USER}/sw-autoclaim-scrapper:latest 
+    container_name: sw-scrapper
+    restart: always
+    environment:
+      - GAMECODES_URL=${GAMECODES_URL}
+      - REDEMPTION_SERVICE_URL="http://redemption-service:${SERVER_PORT}"
+    depends_on:
+      db:
+        condition: service_healthy
+
   watchtower:
     image: containrrr/watchtower
     container_name: watchtower
     restart: always
     # Check for updates every 5 minutes (300 seconds)
-    command: --interval 300 --cleanup
+    command: --interval 300 --cleanup coupon-scraper discord-bot redemption-service
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     environment:
       # CRITICAL: Watchtower needs its own credentials to check GHCR
       - REPO_USER=${GH_USER}
       - REPO_PASS=${GH_PAT}
+
+
+volumes:
+  db-data:
