@@ -76,12 +76,7 @@ func (cfg *apiConfig) HandleDeleteUser(w http.ResponseWriter, r *http.Request) {
 		respondWithMessage(w, http.StatusInternalServerError, "error while trying to delete user")
 		return
 	}
-	rowsAffected, err := result.RowsAffected()
-	if err != nil {
-		log.Printf("Error while trying to fetch number of affected rows: %v", err)
-		respondWithMessage(w, http.StatusInternalServerError, "error while trying to delete user")
-		return
-	}
+	rowsAffected := result.RowsAffected()
 
 	if rowsAffected == 0 {
 		respondWithMessage(w, http.StatusInternalServerError, "error while trying to delete user")

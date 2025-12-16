@@ -27,8 +27,8 @@ func ConvertToDisplayableCoupon(dbCoupon database.Coupon) DisplayableCouponInfo 
 	return DisplayableCouponInfo{
 		Code:        dbCoupon.Code,
 		Status:      dbCoupon.Status,
-		FirstSeenAt: dbCoupon.FirstSeenAt,
-		UpdatedAt:   dbCoupon.UpdatedAt,
+		FirstSeenAt: dbCoupon.FirstSeenAt.Time,
+		UpdatedAt:   dbCoupon.UpdatedAt.Time,
 	}
 }
 

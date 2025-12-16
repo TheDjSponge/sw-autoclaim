@@ -8,7 +8,7 @@ package database
 import (
 	"context"
 
-	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const addCoupon = `-- name: AddCoupon :exec
@@ -16,7 +16,7 @@ INSERT INTO Coupons (code) VALUES ($1) ON CONFLICT (code) DO NOTHING
 `
 
 func (q *Queries) AddCoupon(ctx context.Context, code string) error {
-	_, err := q.db.ExecContext(ctx, addCoupon, code)
+	_, err := q.db.Exec(ctx, addCoupon, code)
 	return err
 }
 
@@ -24,8 +24,8 @@ const deleteCouponById = `-- name: DeleteCouponById :exec
 DELETE FROM Coupons WHERE id = $1
 `
 
-func (q *Queries) DeleteCouponById(ctx context.Context, id uuid.UUID) error {
-	_, err := q.db.ExecContext(ctx, deleteCouponById, id)
+func (q *Queries) DeleteCouponById(ctx context.Context, id pgtype.UUID) error {
+	_, err := q.db.Exec(ctx, deleteCouponById, id)
 	return err
 }
 
@@ -34,7 +34,7 @@ SELECT id, code, status, first_seen_at, updated_at FROM Coupons
 `
 
 func (q *Queries) GetAllCoupons(ctx context.Context) ([]Coupon, error) {
-	rows, err := q.db.QueryContext(ctx, getAllCoupons)
+	rows, err := q.db.Query(ctx, getAllCoupons)
 	if err != nil {
 		return nil, err
 	}
@@ -53,9 +53,6 @@ func (q *Queries) GetAllCoupons(ctx context.Context) ([]Coupon, error) {
 		}
 		items = append(items, i)
 	}
-	if err := rows.Close(); err != nil {
-		return nil, err
-	}
 	if err := rows.Err(); err != nil {
 		return nil, err
 	}
@@ -67,7 +64,7 @@ SELECT id, code, status, first_seen_at, updated_at FROM Coupons WHERE code = $1
 `
 
 func (q *Queries) GetCouponByCode(ctx context.Context, code string) (Coupon, error) {
-	row := q.db.QueryRowContext(ctx, getCouponByCode, code)
+	row := q.db.QueryRow(ctx, getCouponByCode, code)
 	var i Coupon
 	err := row.Scan(
 		&i.ID,
@@ -89,10 +86,10 @@ WHERE
 
 type UpdateCouponStatusParams struct {
 	Status string
-	ID     uuid.UUID
+	ID     pgtype.UUID
 }
 
 func (q *Queries) UpdateCouponStatus(ctx context.Context, arg UpdateCouponStatusParams) error {
-	_, err := q.db.ExecContext(ctx, updateCouponStatus, arg.Status, arg.ID)
+	_, err := q.db.Exec(ctx, updateCouponStatus, arg.Status, arg.ID)
 	return err
 }

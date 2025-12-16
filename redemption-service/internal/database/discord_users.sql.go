@@ -20,6 +20,6 @@ type AddDiscordUserParams struct {
 }
 
 func (q *Queries) AddDiscordUser(ctx context.Context, arg AddDiscordUserParams) error {
-	_, err := q.db.ExecContext(ctx, addDiscordUser, arg.Username, arg.DiscordID)
+	_, err := q.db.Exec(ctx, addDiscordUser, arg.Username, arg.DiscordID)
 	return err
 }

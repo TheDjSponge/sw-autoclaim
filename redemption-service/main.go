@@ -1,15 +1,16 @@
 package main
 
 import (
-	"database/sql"
+	"context"
 	"fmt"
 	"log"
 	"net/http"
 	"os"
 
 	"github.com/TheDjSponge/sw-autoclaim/redemption-service/internal/database"
+	"github.com/jackc/pgx/v5"
+	_ "github.com/jackc/pgx/v5"
 	"github.com/joho/godotenv"
-	_ "github.com/lib/pq"
 )
 
 type apiConfig struct {
@@ -24,7 +25,7 @@ func main() {
 	checkUserAPIURL := os.Getenv("CHECK_USER_URL")
 	claimCouponAPIURL := os.Getenv("CLAIM_COUPON_URL")
 
-	db, err := sql.Open("postgres", urlDB)
+	db, err := pgx.Connect(context.Background(),urlDB)
 	if err != nil {
 		log.Printf("Error when trying to open database: %w", err)
 	}

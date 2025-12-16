@@ -5,31 +5,28 @@
 package database
 
 import (
-	"database/sql"
-	"time"
-
-	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 type Coupon struct {
-	ID          uuid.UUID
+	ID          pgtype.UUID
 	Code        string
 	Status      string
-	FirstSeenAt time.Time
-	UpdatedAt   time.Time
+	FirstSeenAt pgtype.Timestamptz
+	UpdatedAt   pgtype.Timestamptz
 }
 
 type DiscordUser struct {
-	ID        uuid.UUID
+	ID        pgtype.UUID
 	Username  string
 	DiscordID int32
 }
 
 type User struct {
-	ID        uuid.UUID
+	ID        pgtype.UUID
 	DiscordID int32
 	HiveID    string
 	Server    string
-	Active    sql.NullBool
+	Active    pgtype.Bool
 	GameUid   int32
 }

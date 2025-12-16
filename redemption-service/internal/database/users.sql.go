@@ -7,7 +7,8 @@ package database
 
 import (
 	"context"
-	"database/sql"
+
+	"github.com/jackc/pgx/v5/pgconn"
 )
 
 const addUser = `-- name: AddUser :exec
@@ -23,7 +24,7 @@ type AddUserParams struct {
 }
 
 func (q *Queries) AddUser(ctx context.Context, arg AddUserParams) error {
-	_, err := q.db.ExecContext(ctx, addUser,
+	_, err := q.db.Exec(ctx, addUser,
 		arg.HiveID,
 		arg.Server,
 		arg.DiscordID,
@@ -46,8 +47,8 @@ type DeleteUserParams struct {
 	Server    string
 }
 
-func (q *Queries) DeleteUser(ctx context.Context, arg DeleteUserParams) (sql.Result, error) {
-	return q.db.ExecContext(ctx, deleteUser, arg.DiscordID, arg.HiveID, arg.Server)
+func (q *Queries) DeleteUser(ctx context.Context, arg DeleteUserParams) (pgconn.CommandTag, error) {
+	return q.db.Exec(ctx, deleteUser, arg.DiscordID, arg.HiveID, arg.Server)
 }
 
 const getAllUsers = `-- name: GetAllUsers :many
@@ -55,7 +56,7 @@ SELECT id, discord_id, hive_id, server, active, game_uid FROM Users
 `
 
 func (q *Queries) GetAllUsers(ctx context.Context) ([]User, error) {
-	rows, err := q.db.QueryContext(ctx, getAllUsers)
+	rows, err := q.db.Query(ctx, getAllUsers)
 	if err != nil {
 		return nil, err
 	}
@@ -75,9 +76,6 @@ func (q *Queries) GetAllUsers(ctx context.Context) ([]User, error) {
 		}
 		items = append(items, i)
 	}
-	if err := rows.Close(); err != nil {
-		return nil, err
-	}
 	if err := rows.Err(); err != nil {
 		return nil, err
 	}
@@ -94,7 +92,7 @@ type GetUserByHiveCredentialsParams struct {
 }
 
 func (q *Queries) GetUserByHiveCredentials(ctx context.Context, arg GetUserByHiveCredentialsParams) (User, error) {
-	row := q.db.QueryRowContext(ctx, getUserByHiveCredentials, arg.HiveID, arg.Server)
+	row := q.db.QueryRow(ctx, getUserByHiveCredentials, arg.HiveID, arg.Server)
 	var i User
 	err := row.Scan(
 		&i.ID,
