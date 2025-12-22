@@ -22,6 +22,16 @@ type DiscordUser struct {
 	DiscordID int32
 }
 
+type Redemption struct {
+	ID              pgtype.UUID
+	UserID          pgtype.UUID
+	CouponID        pgtype.UUID
+	Status          string
+	ResponseMessage string
+	CreatedAt       pgtype.Timestamptz
+	UpdatedAt       pgtype.Timestamptz
+}
+
 type User struct {
 	ID        pgtype.UUID
 	DiscordID int32

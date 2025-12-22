@@ -32,6 +32,10 @@ func main() {
 	dbQueries := database.New(db)
 	apiCfg := apiConfig{database: dbQueries, checkUserAPIURL: checkUserAPIURL, claimCouponAPIURL: claimCouponAPIURL}
 
+	stopHandler := make(chan struct{})
+
+	go apiCfg.claimCouponRoutine(stopHandler)
+
 	multiplexer := http.ServeMux{}
 	multiplexer.HandleFunc("GET /v1/health", GetServerHealth)
 
@@ -45,7 +49,10 @@ func main() {
 
 	serverPort := os.Getenv("SERVER_PORT")
 	server := http.Server{Addr: fmt.Sprintf(":%v", serverPort), Handler: &multiplexer}
+	log.Println("Starting HTTP server")
 	server.ListenAndServe()
+
+	close(stopHandler)
 }
 
 func GetServerHealth(w http.ResponseWriter, r *http.Request) {
