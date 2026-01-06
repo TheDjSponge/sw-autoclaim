@@ -1,0 +1,17 @@
+[Unit]
+Description=Summoners war autoclaim service
+After=docker.service
+
+[Service]
+Type=oneshot
+WorkingDirectory=/opt/sw-autoclaim
+
+ExecStart=docker compose pull
+ExecStart=docker compose up -d
+
+NoNewPriviledges=yes
+PrivateTmp=yes
+ProtectSystem=full
+
+User=deploy
+

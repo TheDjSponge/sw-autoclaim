@@ -1,0 +1,73 @@
+services:
+
+  db:
+    image: postgres
+    container_name: sw-db
+    restart: always
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+    ports:
+      - "5432:5432"
+    healthcheck: # CRITICAL: Tells Docker when the DB is ready to accept connections
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d template1"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+    volumes:
+      - db-data:/var/lib/postgresql
+
+  migration-service:
+    image: ghcr.io/thedjsponge/sw-db-migrator:latest
+    container_name: sw-migration-service
+    restart: on-failure:3
+    environment:
+      - DB_URL=postgres://${DB_USER}:${DB_PASSWORD}@db/${DB_NAME}?sslmode=disable
+    depends_on:
+      db:
+        condition: service_healthy
+
+  redemption-service:
+    image: ghcr.io/thedjsponge/sw-autoclaim-redemption:latest 
+    container_name: sw-redemption-service
+    restart: always
+    environment:
+      - DB_URL=postgres://${DB_USER}:${DB_PASSWORD}@db/${DB_NAME}?sslmode=disable
+      - CHECK_USER_URL=${CHECK_USER_URL}
+      - CLAIM_COUPON_URL=${CLAIM_COUPON_URL}
+      - SERVER_PORT=${SERVER_PORT}
+    depends_on:
+      db:
+        condition: service_healthy
+      migration-service:
+        condition: service_completed_successfully
+    ports:
+      - "${SERVER_PORT}:${SERVER_PORT}"
+
+  discord-bot:
+    image: ghcr.io/thedjsponge/sw-autoclaim-discord-bot:latest 
+    container_name: sw-discord-bot
+    restart: always
+    environment:
+      - DISCORD_BOT_KEY=${DISCORD_BOT_KEY}
+      - REDEMPTION_SERVICE_URL=http://sw-redemption-service:${SERVER_PORT}
+    platform: linux/arm64/v8
+    depends_on:
+      redemption-service:
+        condition: service_started
+
+
+  coupon-scraper:
+    image: ghcr.io/thedjsponge/sw-autoclaim-scrapper:latest 
+    container_name: sw-scrapper
+    environment:
+      - GAMECODES_URL=${GAMECODES_URL}
+      - REDEMPTION_SERVICE_URL=http://sw-redemption-service:${SERVER_PORT}
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  db-data:

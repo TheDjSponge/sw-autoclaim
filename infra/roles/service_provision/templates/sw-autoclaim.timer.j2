@@ -1,0 +1,11 @@
+[Unit]
+Description=Periodically pulls and runs docker images for the sw-autoclaim service
+
+[Timer]
+OnBootSec=2min
+OnUnitActiveSec=5min
+Persistent=true
+User=deploy
+
+[Install]
+WantedBy=timers.target

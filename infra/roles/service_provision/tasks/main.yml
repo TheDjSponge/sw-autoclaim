@@ -1,0 +1,37 @@
+
+
+- name: Log into GitHub Container Registry
+  community.docker.docker_login:
+    registry: ghcr.io
+    username: "{{ vault_registry_user }}"
+    password: "{{ vault_registry_pat }}"
+    reauthorize: yes
+
+
+- name: Render service template
+  become: true
+  template:
+    src: sw-autoclaim.service.j2
+    dest: /etc/systemd/system/sw-autoclaim.service
+    mode: '0644'
+    owner: deploy
+    group: deploy
+
+- name: Render timer template
+  become: true
+  template:
+    src: sw-autoclaim.timer.j2
+    dest: /etc/systemd/system/sw-autoclaim.timer
+    mode: '0644'
+    owner: deploy
+    group: deploy
+
+# https://docs.ansible.com/projects/ansible/latest/collections/ansible/builtin/systemd_service_module.html#examples
+- name: Start sw-autoclaim service
+  become: true
+  systemd_service:
+    daemon_reload: true
+    name: sw-autoclaim.timer
+    state: started
+    enabled: true
+    

@@ -1,0 +1,5 @@
+
+docker_compose_project_dir: /opt/sw-autoclaim
+compose_file_name: docker-compose.yml
+env_file_name: .env
+service_user: pi

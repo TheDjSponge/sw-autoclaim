@@ -1,0 +1,5 @@
+- hosts: raspberry_pi
+  roles:
+    - docker
+    - compose_deploy
+    - service_provision

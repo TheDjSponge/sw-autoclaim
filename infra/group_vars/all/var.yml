@@ -1,0 +1,3 @@
+app_dir: /opt/sw-autoclaim
+db_name: sw_autoclaim
+server_port: 6000
