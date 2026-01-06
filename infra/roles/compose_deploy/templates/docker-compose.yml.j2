@@ -60,8 +60,8 @@ services:
 
 
   coupon-scraper:
-    image: ghcr.io/thedjsponge/sw-autoclaim-scrapper:latest 
-    container_name: sw-scrapper
+    image: ghcr.io/thedjsponge/sw-autoclaim-scraper:latest 
+    container_name: sw-scraper
     environment:
       - GAMECODES_URL=${GAMECODES_URL}
       - REDEMPTION_SERVICE_URL=http://sw-redemption-service:${SERVER_PORT}
