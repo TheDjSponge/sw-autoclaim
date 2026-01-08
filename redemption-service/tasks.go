@@ -3,10 +3,12 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
 	"time"
 
@@ -41,10 +43,10 @@ func ClaimNewRedemptions(cfg *apiConfig) error {
 		return err
 	}
 	for _, redemption := range unclaimed{
-		fmt.Printf("Attempting to claim coupon : %v for hive_id : %v",redemption.Code, redemption.HiveID)
+		fmt.Printf("Attempting to claim coupon : %v for hive_id : %v ",redemption.Code, redemption.HiveID)
 		isRedeemed, msg, err := cfg.ClaimCoupon(redemption.HiveID, redemption.Server, redemption.Code)
 		if err != nil{
-			fmt.Printf("Error when trying to claim coupon %v for user %v, got message %v and err %v", redemption.Code, redemption.HiveID, msg, err)
+			fmt.Printf("Error when trying to claim coupon %v for user %v, got message : %v , and err : %v", redemption.Code, redemption.HiveID, msg, err)
 		}
 		if isRedeemed{
 			fmt.Println("Coupon claimed successfully!")
@@ -67,6 +69,39 @@ func ClaimNewRedemptions(cfg *apiConfig) error {
 }
 
 
+type RetCode int;
+
+func (r *RetCode) UnmarshalJSON(b []byte) error {
+	var s string
+	err := json.Unmarshal(b, &s)
+	if err == nil{
+		code, err := ExtractRetCodeFromString(s)
+		if err != nil{
+			return err
+		}
+		*r = RetCode(code)
+		return nil
+	}
+
+	var i int
+	err = json.Unmarshal(b, &i)
+	if err == nil{
+		*r = RetCode(i)
+	}
+
+	return errors.New("couldn't Unmarshal RetCode")
+}
+
+func ExtractRetCodeFromString(s string) (int, error){
+	if len(s) < 2 {
+		return -1, errors.New("got unexpected RetCode string")
+	}
+	code, err := strconv.Atoi(s[2:len(s)-1])
+	if err != nil{
+		return -1, err
+	}
+	return code, nil
+}
 
 func (cfg *apiConfig) ClaimCoupon(hive_id string, server string, code string) (bool, string, error) {
 	formData := url.Values{
@@ -95,7 +130,7 @@ func (cfg *apiConfig) ClaimCoupon(hive_id string, server string, code string) (b
 	}
 
 	type responsePayload struct {
-		RetCode  any             `json:"retCode"`
+		RetCode  RetCode         `json:"retCode"`
 		RetMsg   string          `json:"retMsg"`
 		UserData userDataPayload `json:"userData"`
 	}
@@ -113,7 +148,7 @@ func (cfg *apiConfig) ClaimCoupon(hive_id string, server string, code string) (b
 		return false, "", err
 	}
 	// display response payload
-	if respPayload.RetCode != "100" {
+	if respPayload.RetCode != 100 {
 		return false, "", fmt.Errorf("check user endpoint hit failed with code: %v", respPayload)
 	}
 	return true, respPayload.RetMsg, nil
