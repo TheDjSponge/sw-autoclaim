@@ -38,5 +38,5 @@ jobs:
         with:
           context: ./coupon-scraper
           push: true
-          tags: ghcr.io/${{secrets.GIT_USERNAME}}/sw-autoclaim-scrapper:latest
+          tags: ghcr.io/${{secrets.GIT_USERNAME}}/sw-autoclaim-scraper:latest
           platforms: linux/arm64/v8

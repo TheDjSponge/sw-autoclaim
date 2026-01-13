@@ -14,7 +14,7 @@ import (
 )
 
 func StringSetToSlice(set map[string]struct{}) []string {
-	resultSlice := make([]string, len(set))
+	resultSlice := make([]string, 0, len(set))
 	for key := range set {
 		resultSlice = append(resultSlice, key)
 	}
