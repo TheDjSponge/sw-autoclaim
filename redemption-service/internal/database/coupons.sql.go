@@ -76,20 +76,28 @@ func (q *Queries) GetCouponByCode(ctx context.Context, code string) (Coupon, err
 	return i, err
 }
 
-const updateCouponStatus = `-- name: UpdateCouponStatus :exec
+const setCouponActive = `-- name: SetCouponActive :exec
 UPDATE Coupons SET 
-    status = $1, 
+    status = 'active', 
     updated_at = NOW()
 WHERE
-    id = $2
+    id = $1
 `
 
-type UpdateCouponStatusParams struct {
-	Status string
-	ID     pgtype.UUID
+func (q *Queries) SetCouponActive(ctx context.Context, id pgtype.UUID) error {
+	_, err := q.db.Exec(ctx, setCouponActive, id)
+	return err
 }
 
-func (q *Queries) UpdateCouponStatus(ctx context.Context, arg UpdateCouponStatusParams) error {
-	_, err := q.db.Exec(ctx, updateCouponStatus, arg.Status, arg.ID)
+const setCouponExpired = `-- name: SetCouponExpired :exec
+UPDATE Coupons SET 
+    status = 'expired', 
+    updated_at = NOW()
+WHERE
+    id = $1
+`
+
+func (q *Queries) SetCouponExpired(ctx context.Context, id pgtype.UUID) error {
+	_, err := q.db.Exec(ctx, setCouponExpired, id)
 	return err
 }

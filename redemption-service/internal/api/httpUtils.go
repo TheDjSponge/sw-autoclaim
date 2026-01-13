@@ -1,4 +1,4 @@
-package main
+package api
 
 import (
 	"encoding/json"
@@ -11,7 +11,7 @@ type JsonResponse struct {
 	Message string `json:"message"`
 }
 
-func respondWithMessage(w http.ResponseWriter, code int, msg string) {
+func RespondWithMessage(w http.ResponseWriter, code int, msg string) {
 
 	retError := JsonResponse{Status: code, Message: msg}
 	byteError, err := json.Marshal(retError)
@@ -24,13 +24,20 @@ func respondWithMessage(w http.ResponseWriter, code int, msg string) {
 	w.Write(byteError)
 }
 
-func respondWithJSON(w http.ResponseWriter, code int, payload interface{}) {
+func RespondWithJSON(w http.ResponseWriter, code int, payload any) {
 
 	dat, err := json.Marshal(payload)
 	if err != nil {
-		respondWithMessage(w, 500, "Couldn't marshal response body")
+		RespondWithMessage(w, 500, "Couldn't marshal response body")
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(code)
 	w.Write(dat)
+}
+
+
+func GetServerHealth(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("OK"))
 }
