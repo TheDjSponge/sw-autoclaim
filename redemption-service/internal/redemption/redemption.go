@@ -124,6 +124,34 @@ func (s *Service) ClaimCoupon(hive_id string, server string, code string) (APICo
 	return APICode(respPayload.RetCode), respPayload.RetMsg, nil
 }
 
+func (s *Service) ClaimCouponsForUser(ctx context.Context, hive_id string) error {
+	coupons, err := s.db.GetRedemptionsForUser(ctx, hive_id)
+	redemptionEntries := make([]database.AddRedemptionsParams, 0,len(coupons))
+	if err != nil{
+		return fmt.Errorf("failed to get redemptions entries for user: %w", err)
+	}
+	for _, redemption := range coupons{
+		entry, err := s.processRedemption(context.Background(), database.GetUnclaimedRedemptionsRow{
+			ID: redemption.UserID,
+			HiveID: redemption.HiveID,
+			Server: redemption.Server,
+			ID_2: redemption.CouponID,
+			Code: redemption.Code,
+		})
+		if err != nil{
+			fmt.Printf("Error when trying to claim coupon %v for user %v, and err : %v", redemption.Code, redemption.HiveID, err)
+		}
+		redemptionEntries = append(redemptionEntries, entry)
+		time.Sleep(2 * time.Second)
+	}
+
+	_, err = s.db.AddRedemptions(context.Background(), redemptionEntries)
+	if err != nil{
+		return fmt.Errorf("failed to insert new redemptions : %w", err)
+	}
+	return nil
+}
+
 func (s *Service) ClaimNewRedemptions() error {
 	unclaimed, err := s.db.GetUnclaimedRedemptions(context.Background())
 	if err != nil{

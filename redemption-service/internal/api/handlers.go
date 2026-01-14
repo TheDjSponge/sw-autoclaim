@@ -4,18 +4,21 @@ import (
 	"net/http"
 
 	"github.com/TheDjSponge/sw-autoclaim/redemption-service/internal/coupons"
+	"github.com/TheDjSponge/sw-autoclaim/redemption-service/internal/redemption"
 	"github.com/TheDjSponge/sw-autoclaim/redemption-service/internal/users"
 )
 
 type Handler struct{
+	redemptionService *redemption.Service
 	userService *users.Service
 	couponService *coupons.Service
 }
 
-func NewHandler(userService *users.Service, couponService *coupons.Service) *Handler{
+func NewHandler(userService *users.Service, couponService *coupons.Service, redemptionService *redemption.Service) *Handler{
 	return &Handler{
 		userService: userService, 
 		couponService: couponService,
+		redemptionService: redemptionService,
 	}
 }
 

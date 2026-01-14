@@ -35,7 +35,7 @@ func main() {
 	couponService := coupons.NewService(dbQueries)
 	redemptionService := redemption.NewService(dbQueries, cfg.ClaimCouponAPIURL)
 	scheduler := redemption.NewScheduler(redemptionService, CouponClaimInterval)
-	handler := api.NewHandler(userService, couponService)
+	handler := api.NewHandler(userService, couponService, redemptionService)
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 

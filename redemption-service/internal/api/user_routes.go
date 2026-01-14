@@ -1,9 +1,11 @@
 package api
 
 import (
+	"context"
 	"encoding/json"
 	"log"
 	"net/http"
+	"time"
 )
 
 func (h *Handler) HandleNewUser(w http.ResponseWriter, r *http.Request){
@@ -26,6 +28,16 @@ func (h *Handler) HandleNewUser(w http.ResponseWriter, r *http.Request){
 		RespondWithMessage(w, http.StatusInternalServerError, err.Error())
 		return
 	}
+
+	go func (){
+		syncCtx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
+		defer cancel()
+
+		err := h.redemptionService.ClaimCouponsForUser(syncCtx, userInfo.HiveID)
+		if err != nil{
+			log.Printf("failed to sync coupons for user: %v", userInfo.HiveID)
+		}
+	}()
 
 	RespondWithJSON(w, http.StatusCreated, nil)
 }

@@ -18,8 +18,61 @@ type AddRedemptionsParams struct {
 	ResponseMessage string
 }
 
-const getUnclaimedRedemptions = `-- name: GetUnclaimedRedemptions :many
+const getRedemptionsForUser = `-- name: GetRedemptionsForUser :many
+SELECT 
+    u.id AS user_id,
+    u.hive_id,
+    u.server,
+    c.id AS coupon_id,
+    c.code
+FROM
+    users u
+CROSS JOIN coupons c
+WHERE u.hive_id = $1
+    AND c.status IN ('new', 'active')
+    AND NOT EXISTS (
+        SELECT 1
+        FROM redemptions r
+        WHERE r.user_id = u.id
+            AND r.coupon_id = c.id
+    )
+`
 
+type GetRedemptionsForUserRow struct {
+	UserID   pgtype.UUID
+	HiveID   string
+	Server   string
+	CouponID pgtype.UUID
+	Code     string
+}
+
+func (q *Queries) GetRedemptionsForUser(ctx context.Context, hiveID string) ([]GetRedemptionsForUserRow, error) {
+	rows, err := q.db.Query(ctx, getRedemptionsForUser, hiveID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetRedemptionsForUserRow
+	for rows.Next() {
+		var i GetRedemptionsForUserRow
+		if err := rows.Scan(
+			&i.UserID,
+			&i.HiveID,
+			&i.Server,
+			&i.CouponID,
+			&i.Code,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getUnclaimedRedemptions = `-- name: GetUnclaimedRedemptions :many
 SELECT 
     u.id,
     u.hive_id,
@@ -29,7 +82,7 @@ SELECT
 FROM
     users u
 JOIN coupons c
-    ON c.status = 'new'
+    ON c.status IN ('new', 'active')
 WHERE NOT EXISTS (
     SELECT 1
     FROM redemptions r
