@@ -13,13 +13,14 @@ import (
 	"github.com/TheDjSponge/sw-autoclaim/redemption-service/internal/coupons"
 	"github.com/TheDjSponge/sw-autoclaim/redemption-service/internal/database"
 	"github.com/TheDjSponge/sw-autoclaim/redemption-service/internal/redemption"
+	"github.com/TheDjSponge/sw-autoclaim/redemption-service/internal/scheduler"
 	"github.com/TheDjSponge/sw-autoclaim/redemption-service/internal/users"
 	"github.com/jackc/pgx/v5"
 	_ "github.com/jackc/pgx/v5"
 )
 
-const CouponClaimInterval = 24 * time.Hour
-
+const CouponClaimInterval = 30*time.Second
+const CouponCleanInterval = 60*time.Second
 
 func main() {
 	cfg := config.LoadConfig()
@@ -34,7 +35,12 @@ func main() {
 	userService := users.NewService(dbQueries, userValidator)
 	couponService := coupons.NewService(dbQueries)
 	redemptionService := redemption.NewService(dbQueries, cfg.ClaimCouponAPIURL)
-	scheduler := redemption.NewScheduler(redemptionService, CouponClaimInterval)
+	scheduler := scheduler.NewScheduler(
+		CouponClaimInterval, 
+		CouponCleanInterval,
+		func() {redemptionService.ClaimNewRedemptions()},
+		func() {couponService.CleanExpiredCoupons(context.Background())},
+	)
 	handler := api.NewHandler(userService, couponService, redemptionService)
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()

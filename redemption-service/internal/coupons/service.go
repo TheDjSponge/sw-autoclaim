@@ -61,3 +61,11 @@ func (s *Service) AddCouponBatch(ctx context.Context, codes []string) error {
 	}
 	return nil
 }
+
+func (s *Service) CleanExpiredCoupons(ctx context.Context) error {
+	err := s.db.DeleteExpiredCoupons(ctx)
+	if err != nil{
+		return fmt.Errorf("failed when trying to clean expired coupons: %w", err)
+	}
+	return err
+}

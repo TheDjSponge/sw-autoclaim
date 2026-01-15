@@ -29,6 +29,15 @@ func (q *Queries) DeleteCouponById(ctx context.Context, id pgtype.UUID) error {
 	return err
 }
 
+const deleteExpiredCoupons = `-- name: DeleteExpiredCoupons :exec
+DELETE FROM Coupons WHERE status = 'expired'
+`
+
+func (q *Queries) DeleteExpiredCoupons(ctx context.Context) error {
+	_, err := q.db.Exec(ctx, deleteExpiredCoupons)
+	return err
+}
+
 const getAllCoupons = `-- name: GetAllCoupons :many
 SELECT id, code, status, first_seen_at, updated_at FROM Coupons
 `

@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -186,6 +187,7 @@ func (s *Service) processRedemption(ctx context.Context, redemption database.Get
 	switch code{
 	case APICodeSuccess:
 		_ = s.db.SetCouponActive(ctx, redemption.ID_2)
+		log.Printf("Successfully claimed coupon: [%s] for profile: [%s / %s]",redemption.Code, redemption.HiveID, redemption.Server)
 		return successRedemption(redemption, msg), nil
 	
 	case APICodeCouponInvalid:

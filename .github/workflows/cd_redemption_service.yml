@@ -38,5 +38,6 @@ jobs:
         with:
           context: ./redemption-service
           push: true
+          target: prod
           tags: ghcr.io/${{secrets.GIT_USERNAME}}/sw-autoclaim-redemption:latest
           platforms: linux/arm64/v8

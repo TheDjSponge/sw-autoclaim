@@ -10,6 +10,9 @@ SELECT * FROM Coupons WHERE code = $1;
 -- name: DeleteCouponById :exec
 DELETE FROM Coupons WHERE id = $1;
 
+-- name: DeleteExpiredCoupons :exec
+DELETE FROM Coupons WHERE status = 'expired';
+
 -- name: SetCouponActive :exec
 UPDATE Coupons SET 
     status = 'active', 
