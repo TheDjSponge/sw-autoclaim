@@ -52,14 +52,14 @@ func (h *Handler) HandleDeleteUser(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
 	err := decoder.Decode(&userInfo)
 	if err != nil {
-		log.Printf("Error while trying decode user info before deletion: %w", err)
+		log.Printf("Error while trying decode user info before deletion: %v", err)
 		RespondWithMessage(w, http.StatusBadRequest, "error while trying to delete user")
 		return
 	}
 
 	err = h.userService.DeleteUser(r.Context(),userInfo.DiscordID, userInfo.HiveID, userInfo.Server)
 	if err != nil {
-		log.Printf("Error while trying to delete user from database: %w", err)
+		log.Printf("Error while trying to delete user from database: %v", err)
 		RespondWithMessage(w, http.StatusInternalServerError, "error while trying to delete user")
 		return
 	}

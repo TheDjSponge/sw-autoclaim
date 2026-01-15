@@ -30,8 +30,8 @@ func main() {
 	}
 	dbQueries := database.New(db)
 
-
-	userService := users.NewService(dbQueries, cfg.CheckUserAPIURL)
+	userValidator := users.HiveValidator{CheckUserURL: cfg.CheckUserAPIURL}
+	userService := users.NewService(dbQueries, userValidator)
 	couponService := coupons.NewService(dbQueries)
 	redemptionService := redemption.NewService(dbQueries, cfg.ClaimCouponAPIURL)
 	scheduler := redemption.NewScheduler(redemptionService, CouponClaimInterval)

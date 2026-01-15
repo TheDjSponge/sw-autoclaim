@@ -12,20 +12,31 @@ import (
 )
 
 
-type Service struct{
-	db		*database.Queries
-	checkUserURL string
+type UserValidator interface {
+	CheckUser(ctx context.Context, hiveID, server string) (bool, int, error)
 }
 
-func NewService(db *database.Queries, checkUserURL string) *Service {
+type UserStore interface {
+	AddDiscordUser(ctx context.Context, params database.AddDiscordUserParams) error
+	AddUser(ctx context.Context, params database.AddUserParams) error
+	DeleteUserAndCount(ctx context.Context, params database.DeleteUserParams) (int,error)
+	GetAllUsers(ctx context.Context) ([]database.User, error)
+}
+
+type Service struct{
+	db		UserStore
+	validator UserValidator
+}
+
+func NewService(db UserStore, validator UserValidator) *Service {
 	return &Service{
 		db: db,
-		checkUserURL: checkUserURL,
+		validator: validator,
 	}
 }
 
 func (s *Service) RegisterUser(ctx context.Context, hiveID, server, dicordUsername string, discordID int) error {
-	valid, gameUID, err := s.CheckUserValidity(hiveID, server)
+	valid, gameUID, err := s.validator.CheckUser(ctx, hiveID, server)
 	if err != nil || !valid{
 		return fmt.Errorf("user validation failed: %w", err)
 	}
@@ -49,11 +60,10 @@ func (s *Service) RegisterUser(ctx context.Context, hiveID, server, dicordUserna
 }
 
 func (s *Service) DeleteUser(ctx context.Context, discordID int, hiveID, server string) error {
-	result, err := s.db.DeleteUser(ctx, database.DeleteUserParams{DiscordID: int32(discordID), HiveID: hiveID, Server: server})
+	rowsAffected, err := s.db.DeleteUserAndCount(ctx, database.DeleteUserParams{DiscordID: int32(discordID), HiveID: hiveID, Server: server})
 	if err != nil {
 		return fmt.Errorf("failed to delete user: %w", err)
 	}
-	rowsAffected := result.RowsAffected()
 	if rowsAffected == 0 {
 		return fmt.Errorf("failed to reference any user to delete")
 	}
@@ -69,7 +79,11 @@ func (s *Service) GetAllUsers(ctx context.Context) ([]database.User, error){
 
 }
 
-func (s *Service) CheckUserValidity(hive_id string, server string) (bool, int, error) {
+type HiveValidator struct{
+	CheckUserURL string
+}
+
+func (hv HiveValidator) CheckUser(ctx context.Context, hive_id string, server string) (bool, int, error) {
 	formData := url.Values{
 		"country": {"CH"},
 		"lang":    {"fr"},
@@ -79,7 +93,7 @@ func (s *Service) CheckUserValidity(hive_id string, server string) (bool, int, e
 	}
 	encodedData := formData.Encode()
 
-	req, err := http.NewRequest("POST", s.checkUserURL, strings.NewReader(encodedData))
+	req, err := http.NewRequest("POST", hv.CheckUserURL, strings.NewReader(encodedData))
 	if err != nil {
 		fmt.Println("throwing at request creation")
 		return false, -1, err
