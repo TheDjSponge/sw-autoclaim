@@ -12,6 +12,3 @@ __pycache__/
 
 ## IDE files
 .vscode/
-
-## Local testing docker compose
-docker-compose.yml
