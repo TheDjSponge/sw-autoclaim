@@ -51,6 +51,9 @@ func main() {
 			w.WriteHeader(http.StatusInternalServerError)
 		default:
 			// Happy Path
+			if hiveID == "deleted_user"{
+				jsonResponse(w, 503, "Invalid hive ID", nil)
+			}
 			jsonResponse(w, 100, "Your reward has been sent to your inbox.", nil)
 		}
 	})
