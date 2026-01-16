@@ -19,8 +19,8 @@ import (
 	_ "github.com/jackc/pgx/v5"
 )
 
-const CouponClaimInterval = 30*time.Second
-const CouponCleanInterval = 60*time.Second
+const CouponClaimInterval = time.Hour * 24
+const CouponCleanInterval = time.Hour * 24 * 7
 
 func main() {
 	cfg := config.LoadConfig()
