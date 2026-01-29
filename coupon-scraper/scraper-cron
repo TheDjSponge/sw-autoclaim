@@ -1,1 +1,1 @@
-0 0 */3 * * /app/scraper 
+0 0 * * * /app/scraper 
