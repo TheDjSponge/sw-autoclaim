@@ -63,20 +63,20 @@ services:
   #     redemption-service:
   #       condition: service_started
 
-  coupon-scraper:
-    image: thedjsponge/sw-scraper
-    build:
-      context: ./coupon-scraper
-      dockerfile: Dockerfile
-    container_name: sw-scraper
-    environment:
-      - GAMECODES_URL=${GAMECODES_URL}
-      - REDEMPTION_SERVICE_URL=http://redemption-service:${SERVER_PORT}
-    depends_on:
-      db:
-        condition: service_healthy
-      redemption-service:
-        condition: service_started
+  # coupon-scraper:
+  #   image: thedjsponge/sw-scraper
+  #   build:
+  #     context: ./coupon-scraper
+  #     dockerfile: Dockerfile
+  #   container_name: sw-scraper
+  #   environment:
+  #     - GAMECODES_URL=${GAMECODES_URL}
+  #     - REDEMPTION_SERVICE_URL=http://redemption-service:${SERVER_PORT}
+  #   depends_on:
+  #     db:
+  #       condition: service_healthy
+  #     redemption-service:
+  #       condition: service_started
 
   mock-hive:
     container_name: sw-mock-hive
