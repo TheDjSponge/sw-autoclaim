@@ -15,8 +15,8 @@ import (
 	"github.com/TheDjSponge/sw-autoclaim/redemption-service/internal/redemption"
 	"github.com/TheDjSponge/sw-autoclaim/redemption-service/internal/scheduler"
 	"github.com/TheDjSponge/sw-autoclaim/redemption-service/internal/users"
-	"github.com/jackc/pgx/v5"
 	_ "github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 const CouponClaimInterval = time.Hour * 24
@@ -25,11 +25,19 @@ const CouponCleanInterval = time.Hour * 24 * 7
 func main() {
 	cfg := config.LoadConfig()
 
-	db, err := pgx.Connect(context.Background(),cfg.DBConnURL)
+	dbConfig, _ := pgxpool.ParseConfig(cfg.DBConnURL)
+	dbConfig.MaxConns = 10
+	dbConfig.MinConns = 1
+	dbConfig.MaxConnLifetime = 1 * time.Hour
+	dbConfig.MaxConnIdleTime = 30 * time.Minute
+	dbConfig.HealthCheckPeriod = 5 * time.Minute
+	
+	pool, err := pgxpool.NewWithConfig(context.Background(), dbConfig)
 	if err != nil {
 		log.Printf("Error when trying to open database: %v", err)
 	}
-	dbQueries := database.New(db)
+	defer pool.Close()
+	dbQueries := database.New(pool)
 
 	userValidator := users.HiveValidator{CheckUserURL: cfg.CheckUserAPIURL}
 	userService := users.NewService(dbQueries, userValidator)
