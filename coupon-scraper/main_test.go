@@ -1,5 +1,30 @@
 package main
 
+import (
+	"strings"
+	"testing"
+)
+
+func TestExtractCodesFromBodySample(t *testing.T) {
+	got := make(map[string](struct{}))
+	want := []string{"SW2025DEC9PJ", "POUETPOUET"}
+	err := ExtractCodesFromBody(strings.NewReader(HTML), got)
+	if err != nil {
+		t.Errorf("Extracting sample html code resulted in an error: %v", err)
+	}
+
+	if len(got) != len(want) {
+		t.Errorf("Coupon tracking found: %d elems, expected: %d", len(got), len(want))
+	}
+
+	for _, val := range want {
+		_, ok := got[val]
+		if !ok {
+			t.Errorf("The following code: `%v` was not found in scraped codes.", val)
+		}
+	}
+}
+
 const HTML string = `<div class="container">
   	<nav aria-label="breadcrumb">
       <ol class="breadcrumb box-shadow">
