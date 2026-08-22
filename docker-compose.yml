@@ -17,7 +17,7 @@ services:
       retries: 5
 
   migration-service:
-    image: thedjsponge/sw-migration-service
+    # image: thedjsponge/sw-migration-service
     build:
       context: ./database
       dockerfile: Dockerfile
@@ -30,7 +30,7 @@ services:
         condition: service_healthy
 
   redemption-service:
-    image: thedjsponge/sw-redemption-service
+    # image: thedjsponge/sw-redemption-service
     build:
       context: ./redemption-service
       target: prod
@@ -49,19 +49,19 @@ services:
     ports:
       - "${SERVER_PORT}:${SERVER_PORT}"
 
-  # discord-bot:
-  #   image: thedjsponge/sw-discord-bot
-  #   build:
-  #     context: ./discord-bot
-  #     dockerfile: Dockerfile
-  #   container_name: sw-discord-bot
-  #   restart: always
-  #   environment:
-  #     - DISCORD_BOT_KEY=${DISCORD_BOT_KEY}
-  #     - REDEMPTION_SERVICE_URL=http://redemption-service:${SERVER_PORT}
-  #   depends_on:
-  #     redemption-service:
-  #       condition: service_started
+  discord-bot:
+    # image: thedjsponge/sw-discord-bot
+    build:
+      context: ./discord-bot
+      dockerfile: Dockerfile
+    container_name: sw-discord-bot
+    restart: always
+    environment:
+      - DISCORD_BOT_KEY=${DISCORD_BOT_KEY}
+      - REDEMPTION_SERVICE_URL=http://redemption-service:${SERVER_PORT}
+    depends_on:
+      redemption-service:
+        condition: service_started
 
   # coupon-scraper:
   #   image: thedjsponge/sw-scraper
